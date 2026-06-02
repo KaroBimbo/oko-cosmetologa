@@ -12,7 +12,6 @@ import {
   Layers3,
   Loader2,
   Moon,
-  Percent,
   Plus,
   ShieldAlert,
   Star,
@@ -119,7 +118,8 @@ const mockSources = {
   ],
 };
 
-const chartColors = ["#6f2fb0", "#9a5be6", "#c86dd7", "#e7a6c7", "#f1b992", "#6f987d"];
+const chartColors = ["#6f2fb0", "#c65cc7", "#ef8a74", "#e8b95d", "#78a982", "#4fa6a2", "#7d91d8"];
+const preparationSliceColors = ["#6f2fb0", "#d25abb", "#f08d72", "#efbd66", "#78a982", "#52aaa6", "#7d91d8"];
 
 const entrance = {
   hidden: { opacity: 0, y: 18 },
@@ -720,16 +720,16 @@ function PreparationDonut({ data }) {
   return (
     <div className="donut-card">
       <div className="preparation-chart-shell">
-        <ResponsiveContainer height={238} width="100%">
-          <PieChart margin={{ bottom: 10, left: 4, right: 4, top: 10 }}>
+        <ResponsiveContainer height={248} width="100%">
+          <PieChart margin={{ bottom: 8, left: 8, right: 8, top: 8 }}>
             <Pie
               cornerRadius={5}
               cx="50%"
               cy="50%"
               data={chart.groups}
               dataKey="value"
-              innerRadius={42}
-              outerRadius={76}
+              innerRadius={34}
+              outerRadius={66}
               paddingAngle={3}
               stroke="rgba(255, 250, 253, 0.86)"
               strokeWidth={2}
@@ -744,10 +744,10 @@ function PreparationDonut({ data }) {
               cy="50%"
               data={chart.details}
               dataKey="value"
-              innerRadius={86}
+              innerRadius={76}
               label={renderPreparationArcLabel}
               labelLine={false}
-              outerRadius={108}
+              outerRadius={116}
               paddingAngle={2}
               stroke="rgba(255, 250, 253, 0.72)"
               strokeWidth={1.5}
@@ -759,10 +759,6 @@ function PreparationDonut({ data }) {
             <Tooltip content={<PreparationTooltip total={chart.total} />} />
           </PieChart>
         </ResponsiveContainer>
-        <div className="preparation-chart-center" aria-hidden="true">
-          <strong>{chart.total}</strong>
-          <span>сигналов</span>
-        </div>
       </div>
       <div className="donut-legend">
         {chart.groups.map((item) => (
@@ -802,19 +798,23 @@ function PreparationTooltip({ active, payload, total }) {
   );
 }
 
-function renderPreparationArcLabel({ cx, cy, midAngle, outerRadius, payload }) {
+function renderPreparationArcLabel({ cx, cy, innerRadius, midAngle, outerRadius, payload }) {
   const percentage = payload?.percentage || 0;
-  const shortLabel = payload?.shortLabel || "";
+  const labelLines = payload?.chartLabel || [];
 
   if (percentage < 14) return null;
 
-  const radius = outerRadius + 14;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.58;
   const x = cx + radius * Math.cos((-midAngle * Math.PI) / 180);
   const y = cy + radius * Math.sin((-midAngle * Math.PI) / 180);
 
   return (
-    <text className="preparation-arc-label" dominantBaseline="central" textAnchor={x > cx ? "start" : "end"} x={x} y={y}>
-      {shortLabel}
+    <text className="preparation-arc-label" dominantBaseline="central" textAnchor="middle" x={x} y={y}>
+      {labelLines.map((line, index) => (
+        <tspan dy={index === 0 ? 0 : 10} key={line} x={x}>
+          {line}
+        </tspan>
+      ))}
     </text>
   );
 }
@@ -844,23 +844,22 @@ function buildNestedPreparationChart(data) {
       percentage: (item.value / total) * 100,
     }));
 
-  const groupColor = new Map(groups.map((item) => [item.label, item.color]));
   const groupIndex = new Map(groups.map((item, index) => [item.label, index]));
 
   const details = normalized
     .sort((a, b) => b.value - a.value)
     .slice(0, 7)
     .map((item, index) => {
-      const base = groupColor.get(item.group) || chartColors[index % chartColors.length];
+      const base = preparationSliceColors[index % preparationSliceColors.length];
       const layerIndex = groupIndex.get(item.group) || 0;
       return {
         id: `prep-${item.name}`,
         label: item.name,
-        shortLabel: shortenPreparationLabel(item.name),
+        chartLabel: formatPreparationChartLabel(item.name),
         value: item.value,
         group: item.group,
         percentage: (item.value / total) * 100,
-        color: hexToRgba(base, Math.max(0.38, 0.92 - index * 0.08 - layerIndex * 0.04)),
+        color: hexToRgba(base, Math.max(0.62, 0.94 - layerIndex * 0.04)),
       };
     });
 
@@ -876,9 +875,16 @@ function classifyPreparation(name) {
   return "Другие препараты";
 }
 
-function shortenPreparationLabel(name) {
-  if (name.length <= 9) return name;
-  return `${name.slice(0, 8)}…`;
+function formatPreparationChartLabel(name) {
+  const normalized = name.replace(/\s+/g, " ").trim();
+  if (normalized.length <= 10) return [normalized];
+
+  const parts = normalized.split(/[\s-]+/).filter(Boolean);
+  if (parts.length >= 2 && parts[0].length <= 9) {
+    return [parts[0], parts[1].length > 8 ? `${parts[1].slice(0, 7)}…` : parts[1]];
+  }
+
+  return [`${normalized.slice(0, 9)}…`];
 }
 
 function hexToRgba(hex, alpha) {
@@ -917,20 +923,49 @@ function PromotionList({ items }) {
   return (
     <div className="promotion-list">
       {fallback.slice(0, 5).map((item, index) => (
-        <article key={`${item.name}-${item.text}`}>
-          <div>
-            <Percent size={15} />
-            <strong>Оффер</strong>
-          </div>
-          <span>{item.text}</span>
-          <small>{item.name}</small>
-          <div className="offer-meter" aria-hidden="true">
-            <i style={{ width: `${index === 0 ? 86 : index === 1 ? 68 : 52}%` }} />
-          </div>
-        </article>
+        <PromotionCard index={index} item={item} key={`${item.name}-${item.text}`} />
       ))}
     </div>
   );
+}
+
+function PromotionCard({ index, item }) {
+  const display = getPromotionDisplay(item.text, index);
+
+  return (
+    <article>
+      <div>
+        <strong className={display.hasPercent ? "promotion-percent" : ""}>{display.label}</strong>
+      </div>
+      <span>{item.text}</span>
+      <small>{item.name}</small>
+      <div className="offer-meter" aria-hidden="true">
+        <i style={{ width: `${display.meter}%` }} />
+      </div>
+    </article>
+  );
+}
+
+function getPromotionDisplay(text, index) {
+  const percentMatch = text.match(/(\d{1,2})\s?%/);
+  if (percentMatch) {
+    const percent = Number(percentMatch[1]);
+    return {
+      hasPercent: true,
+      label: `${percent}%`,
+      meter: Math.min(94, Math.max(44, percent * 4.2)),
+    };
+  }
+
+  if (/бесплатн|подар|консультац/i.test(text)) {
+    return { hasPercent: false, label: "Бонус", meter: 68 };
+  }
+
+  if (/пакет|комплекс|зон|губы|подбород/i.test(text)) {
+    return { hasPercent: false, label: "Пакет", meter: 78 };
+  }
+
+  return { hasPercent: false, label: "Акция", meter: index === 0 ? 72 : 56 };
 }
 
 function Warnings({ warnings }) {
