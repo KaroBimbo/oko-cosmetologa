@@ -38,7 +38,7 @@ const DEFAULT_SERVICE = "контурная пластика";
 
 const SOURCE_OPTIONS = [
   { id: "yandex", label: "Яндекс Карты", detail: "локальные карточки" },
-  { id: "avito", label: "Avito", detail: "частные офферы" },
+  { id: "avito", label: "Avito", detail: "объявления и предложения" },
   { id: "instagram", label: "Instagram", detail: "профили клиник" },
 ];
 
@@ -92,7 +92,7 @@ const mockCompetitors = [
 
 const mockReport = `
 ### Карта рынка
-В демо-режиме видно, как отчет будет выглядеть после подключения источников. Основная конкуренция строится вокруг доверия к врачу, понятного прайса и доказуемого опыта.
+В демо-режиме видно, как отчет будет выглядеть после подключения источников. Основная конкуренция строится вокруг доверия к врачу, понятных цен и доказуемого опыта.
 
 ### Цены и препараты
 - В примере встречаются Juvederm, Belotero, Stylage, Radiesse и Restylane.
@@ -213,14 +213,11 @@ export default function Home() {
       <section className="dashboard-shell" aria-label="Око косметолога">
         <motion.header animate="visible" className="topbar" initial="hidden" transition={transition} variants={entrance}>
           <div>
-            <div className="product-title-lockup">
-              <img alt="" src={BRAND_LOGO_URL} />
-              <div>
-                <p className="eyebrow">Анализ конкурентов</p>
-                <h1>Око косметолога</h1>
-              </div>
+            <div className="page-title-block">
+              <p className="eyebrow">Рабочая панель</p>
+              <h1>Анализ конкурентов</h1>
             </div>
-            <p className="topbar-subtitle">Локальная beauty-tech аналитика для цен, офферов, препаратов и позиционирования.</p>
+            <p className="topbar-subtitle">Цены, препараты, акции и источники конкурентов в одном AI-отчёте.</p>
           </div>
           <div className="topbar-actions">
             <motion.button className="mode-button" onClick={() => setIsSoftMode((value) => !value)} type="button" whileTap={tapMotion}>
@@ -250,14 +247,14 @@ export default function Home() {
           <div className="launch-content-zone">
             <div className="launch-card-head">
               <div>
-                <p className="section-kicker">Око аналитики</p>
+                <p className="section-kicker">Панель анализа</p>
                 <h2>Студия запуска анализа</h2>
                 <p className="launch-copy">Соберите конкурентную карту по городу, услуге и источникам за один запуск.</p>
                 <div className="hero-tags" aria-label="Возможности">
                   <span>карты</span>
-                  <span>прайсы</span>
+                  <span>цены</span>
                   <span>акции</span>
-                  <span>соцсигналы</span>
+                  <span>отзывы и активность</span>
                 </div>
               </div>
               <div className="launch-status">
@@ -326,8 +323,8 @@ export default function Home() {
 
             <div className="source-summary">
               <Metric label="Лимит" value={`до ${limit || 20}`} />
-              <Metric label="Краулинг" value="10 сайтов" />
-              <Metric label="Модель" value="LLM" />
+              <Metric label="Проверка сайтов" value="10 сайтов" />
+              <Metric label="AI-модель" value="OpenRouter" />
             </div>
 
             {state === "error" && <div className="inline-error">{error}</div>}
@@ -412,7 +409,7 @@ function Sidebar({ isMenuOpen, setIsMenuOpen }) {
 
         <div className="brand-manifest">
           <span>BEAUTY INTELLIGENCE</span>
-          <p>Аналитика цен, офферов и позиционирования для косметологии.</p>
+          <p>Аналитика цен, акций и позиционирования для косметологии.</p>
         </div>
 
         <nav className="nav-stack" aria-label="Разделы">
@@ -471,7 +468,7 @@ function ResultsDashboard({ chartData, competitors, isRealResult, priceInsights,
       </div>
 
       <div className="result-grid">
-        <DashboardPanel className="llm-panel" eyebrow={isRealResult ? "LLM-отчет" : "Демо LLM-отчет"} title="Стратегические выводы">
+        <DashboardPanel className="llm-panel" eyebrow={isRealResult ? "AI-отчет" : "Демо AI-отчет"} title="Стратегические выводы">
           <div className="report-hero">
             <div className="panel-lottie">
               <MiniLottie />
@@ -494,10 +491,10 @@ function ResultsDashboard({ chartData, competitors, isRealResult, priceInsights,
         <aside className="right-rail">
           <DashboardPanel eyebrow="Цены / препараты" title="Препараты">
             <PreparationDonut data={chartData} />
-            <InsightList empty="Прайсы пока не найдены" items={priceInsights} limit={3} />
+            <InsightList empty="Цены пока не найдены" items={priceInsights} limit={3} />
           </DashboardPanel>
 
-          <DashboardPanel eyebrow="Акции" title="Офферы">
+          <DashboardPanel eyebrow="Акции" title="Предложения">
             <PromotionList items={promotionInsights} />
           </DashboardPanel>
 
@@ -671,7 +668,7 @@ function LoadingState() {
       </div>
       <div>
         <p className="section-kicker">Сбор данных</p>
-        <h2>Ищу конкурентов, прайсы, акции и профили</h2>
+        <h2>Ищу конкурентов, цены, акции и профили</h2>
         <p>Источники собираются последовательно: если один сервис не отвечает, отчет продолжит собираться по доступным данным.</p>
       </div>
     </motion.section>
@@ -692,20 +689,27 @@ function CompetitorTable({ competitors }) {
       <div className="table-head">
         <span>Клиника</span>
         <span>Рейтинг</span>
-        <span>Цена</span>
+        <span>Цена/услуга</span>
         <span>Источник</span>
       </div>
-      {competitors.slice(0, 20).map((competitor) => (
-        <article className="table-row" key={`${competitor.name}-${competitor.address}`}>
-          <div>
-            <strong>{competitor.name}</strong>
-            <small>{competitor.address || "адрес не найден"}</small>
-          </div>
-          <span>{competitor.rating ? competitor.rating.toFixed(1) : "нет"}</span>
-          <span>{competitor.commercialSignals?.prices?.[0] || "цена не найдена"}</span>
-          <SourceBadge label={competitor.website ? "сайт" : "карты"} />
-        </article>
-      ))}
+      {competitors.slice(0, 20).map((competitor) => {
+        const price = competitor.commercialSignals?.prices?.[0] || "цена не найдена";
+        const source = competitor.website ? "сайт" : "карты";
+
+        return (
+          <article className="table-row" key={`${competitor.name}-${competitor.address}`}>
+            <div className="table-clinic">
+              <strong>{competitor.name}</strong>
+              <small>{competitor.address || "адрес не найден"}</small>
+            </div>
+            <span className="table-rating" data-label="Рейтинг">{competitor.rating ? competitor.rating.toFixed(1) : "нет"}</span>
+            <span className="table-price" data-label="Цена/услуга">{price}</span>
+            <span className="table-source" data-label="Источник">
+              <SourceBadge label={source} />
+            </span>
+          </article>
+        );
+      })}
     </div>
   );
 }
@@ -1071,7 +1075,7 @@ function buildPulseCards({ competitors, enabledSourceCount, priceInsights, promo
       animated: true,
       label: "Карта рынка",
       value: `${Math.min(94, competitorScore)}%`,
-      detail: "плотность видимых конкурентов",
+      detail: "видимость рынка",
       progress: Math.min(94, competitorScore),
     },
     {
@@ -1086,14 +1090,14 @@ function buildPulseCards({ competitors, enabledSourceCount, priceInsights, promo
       animated: true,
       label: "Цены",
       value: priceInsights.length > 0 ? `${priceInsights.length}` : "demo",
-      detail: "найденные прайсы и препараты",
+      detail: "найденные цены и препараты",
       progress: priceScore,
     },
     {
       icon: Flame,
       label: "Акции",
       value: promotionInsights.length > 0 ? `${promotionInsights.length}` : "demo",
-      detail: "пакеты и входные офферы",
+      detail: "пакеты и акции",
       progress: promoScore,
     },
     {
