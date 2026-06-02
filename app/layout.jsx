@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./ui-fixes.css";
 
 export const metadata = {
   title: "Око косметолога",
