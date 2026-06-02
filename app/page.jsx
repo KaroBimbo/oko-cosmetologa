@@ -15,7 +15,6 @@ import {
   Plus,
   ShieldAlert,
   Star,
-  UserRound,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
@@ -44,6 +43,7 @@ const SOURCE_OPTIONS = [
 
 const IRIS_IMAGE_URL = "/assets/iris-market-bg.png";
 const BRAND_LOGO_URL = "/assets/oko-cosmetologa-mark.png";
+const PROFILE_AVATAR_URL = "/assets/karolina-avatar.png";
 
 const sidebarItems = [
   { label: "Анализ рынка", icon: AnimatedChartColumn, active: true },
@@ -436,7 +436,7 @@ function Sidebar({ isMenuOpen, setIsMenuOpen }) {
 
       <div className="profile-mini">
         <div className="profile-avatar">
-          <UserRound size={18} />
+          <img alt="Karolina" src={PROFILE_AVATAR_URL} />
         </div>
         <div>
           <strong>Karolina</strong>
