@@ -206,7 +206,7 @@ export default function Home() {
 
   return (
     <main className={isSoftMode ? "app-shell soft-mode" : "app-shell"}>
-      <VantaTopologyBackground backgroundColor={0xf7bc94} className="page-vanta-background" color={0x9a5be6} />
+      <VantaTopologyBackground backgroundColor={0xf7d7df} className="page-vanta-background" color={0x9a5be6} />
       <MobileTopbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
 
