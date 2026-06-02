@@ -16,6 +16,26 @@
   max-width: 760px !important;
 }
 
+.profile-avatar svg {
+  display: none !important;
+}
+
+.profile-avatar::before {
+  content: "К";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary-gradient);
+  color: #fffafd;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
 .source-toggle {
   min-width: 0 !important;
   align-items: center !important;
