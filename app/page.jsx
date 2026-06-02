@@ -215,7 +215,12 @@ export default function Home() {
           <div>
             <div className="page-title-block">
               <p className="eyebrow">Рабочая панель</p>
-              <h1>Анализ конкурентов</h1>
+              <h1 className="hero-title" aria-label="Око косметолога">
+                <span className="hero-title-first-o" aria-hidden="true">
+                  О
+                </span>
+                <span aria-hidden="true">ко косметолога</span>
+              </h1>
             </div>
             <p className="topbar-subtitle">Цены, препараты, акции и источники конкурентов в одном AI-отчёте.</p>
           </div>
