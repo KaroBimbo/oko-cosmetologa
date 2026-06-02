@@ -1,0 +1,107 @@
+.product-title-lockup img {
+  display: none !important;
+}
+
+.product-title-lockup {
+  display: block !important;
+}
+
+.product-title-lockup h1 {
+  font-size: clamp(2.5rem, 6vw, 5.2rem) !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.055em !important;
+}
+
+.topbar-subtitle {
+  max-width: 760px !important;
+}
+
+.source-toggle {
+  min-width: 0 !important;
+  align-items: center !important;
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+}
+
+.source-toggle-copy {
+  min-width: 0 !important;
+}
+
+.source-toggle-copy strong,
+.source-toggle-copy small {
+  display: block !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+.source-toggle-copy strong {
+  white-space: nowrap !important;
+}
+
+.competitor-table {
+  display: grid !important;
+  gap: 14px !important;
+  overflow: visible !important;
+}
+
+.competitor-table .table-head {
+  display: none !important;
+}
+
+.competitor-table .table-row {
+  display: grid !important;
+  grid-template-columns: minmax(170px, 1.2fr) minmax(90px, 0.4fr) minmax(220px, 1.5fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  width: 100% !important;
+  padding: 18px 20px !important;
+  border: 1px solid rgba(123, 53, 191, 0.14) !important;
+  border-radius: 22px !important;
+  background: rgba(255, 250, 253, 0.78) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+}
+
+.competitor-table .table-row > div,
+.competitor-table .table-row > span {
+  min-width: 0 !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+.competitor-table .table-row > div strong,
+.competitor-table .table-row > div small,
+.competitor-table .table-row > span:nth-child(3) {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+.competitor-table .table-row > span:nth-child(2) {
+  white-space: nowrap !important;
+  font-weight: 800 !important;
+}
+
+.source-badge {
+  white-space: nowrap !important;
+}
+
+@media (max-width: 900px) {
+  .competitor-table .table-row {
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+  }
+
+  .competitor-table .table-row > span:nth-child(2)::before {
+    content: "Рейтинг: ";
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .competitor-table .table-row > span:nth-child(3)::before {
+    content: "Цена: ";
+    color: var(--muted);
+    font-weight: 700;
+  }
+}
