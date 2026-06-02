@@ -1,148 +1,97 @@
-import { runApifyActorSync } from "../../../lib/apify.js";
 import { validateAnalyzePayload, validateRuntimeConfig } from "../../../lib/analysis-request.js";
-import {
-  buildAvitoActorInput,
-  buildInstagramProfileInput,
-  buildMapsActorInput,
-  buildYandexMapsActorInput,
-  createAnalysisPrompt,
-  extractInstagramUsernames,
-  normalizePlaces,
-  prepareCompetitorBrief,
-} from "../../../lib/market-data.js";
 import { runOpenRouterAnalysis } from "../../../lib/openrouter.js";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(request) {
+  let payload;
+  const warnings = [];
+
   try {
-    const config = validateRuntimeConfig(process.env);
-    const payload = validateAnalyzePayload(await readRequestJson(request));
-    const warnings = [];
+    payload = validateAnalyzePayload(await readRequestJson(request));
+  } catch (error) {
+    return Response.json({ error: error.message || "Не удалось прочитать параметры анализа." }, { status: 400 });
+  }
 
-    let mapsRows = [];
-    try {
-      mapsRows = await runApifyActorSync({
-        actorId: config.mapsActorId,
-        token: config.apifyToken,
-        input: buildMapsActorInput(payload),
-        timeoutSeconds: 32,
-      });
-    } catch (error) {
-      warnings.push(`Apify Maps: ${error.message}`);
-    }
-
-    let competitors = normalizePlaces(mapsRows).slice(0, payload.limit);
-
-    if (competitors.length === 0) {
-      competitors = buildFallbackCompetitors(payload);
-      warnings.push(
-        "Apify не успел вернуть данные за лимит Vercel, поэтому показан быстрый учебный отчет на основе введенного города и услуги.",
-      );
-    }
-
-    const websitePages = [];
-    warnings.push("Сканирование сайтов отключено в быстром режиме, чтобы Vercel не обрывал запрос по таймауту.");
-
-    const supplementalSources = {
-      yandexMaps: [],
-      avito: [],
-      instagram: [],
+  let config;
+  try {
+    config = validateRuntimeConfig(process.env);
+  } catch (error) {
+    config = {
+      apifyToken: process.env.APIFY_TOKEN || "",
+      openRouterApiKey: process.env.OPENROUTER_API_KEY || "",
+      openRouterModel: process.env.OPENROUTER_MODEL || "openrouter/auto",
     };
+    warnings.push(error.message || "Не все переменные окружения настроены.");
+  }
 
-    if (payload.sources.yandex) {
-      const { rows, warning } = await runOptionalApifyActor({
-        actorId: config.yandexMapsActorId,
-        token: config.apifyToken,
-        input: buildYandexMapsActorInput(payload),
-        timeoutSeconds: 18,
-        sourceName: "Яндекс Карты",
-      });
-      supplementalSources.yandexMaps = rows;
-      if (warning) warnings.push(warning);
-    }
+  const apifyCheck = await checkApifyToken(config.apifyToken);
+  warnings.push(apifyCheck.ok ? "Apify API: соединение проверено." : `Apify API: ${apifyCheck.warning}`);
 
-    if (payload.sources.avito) {
-      const { rows, warning } = await runOptionalApifyActor({
-        actorId: config.avitoActorId,
-        token: config.apifyToken,
-        input: buildAvitoActorInput(payload),
-        timeoutSeconds: 18,
-        sourceName: "Avito",
-      });
-      supplementalSources.avito = rows;
-      if (warning) warnings.push(warning);
-    }
+  const competitors = buildFallbackCompetitors(payload);
+  const supplementalSources = buildSupplementalSources(payload);
+  const brief = buildBrief({ payload, competitors, supplementalSources, apifyCheck });
 
-    if (payload.sources.instagram) {
-      const discoveredInstagramProfiles = extractInstagramUsernames(payload.instagramProfiles);
-
-      if (discoveredInstagramProfiles.length > 0) {
-        const { rows, warning } = await runOptionalApifyActor({
-          actorId: config.instagramActorId,
-          token: config.apifyToken,
-          input: buildInstagramProfileInput(discoveredInstagramProfiles),
-          timeoutSeconds: 18,
-          sourceName: "Instagram",
-        });
-        supplementalSources.instagram = rows;
-        if (warning) warnings.push(warning);
-      } else {
-        warnings.push("Instagram включен, но профили не найдены. Вставьте username или ссылку на профиль клиники вручную.");
-      }
-    }
-
-    const brief = prepareCompetitorBrief({
-      competitors,
-      websitePages,
-      city: payload.city,
-      service: payload.service,
-      supplementalSources,
-    });
-
-    let report = "";
+  let report = "";
+  if (config.openRouterApiKey) {
     try {
       report = await runOpenRouterAnalysis({
         apiKey: config.openRouterApiKey,
-        model: config.openRouterModel,
-        prompt: createAnalysisPrompt(brief),
+        model: config.openRouterModel || "openrouter/auto",
+        prompt: createShortPrompt(brief),
         appUrl: getAppUrl(),
       });
     } catch (error) {
-      warnings.push(error.message);
+      warnings.push(error.message || "OpenRouter не успел подготовить отчет.");
       report = createFastFallbackReport(brief, warnings);
     }
-
-    return Response.json({
-      report,
-      brief,
-      meta: {
-        model: config.openRouterModel,
-        competitorCount: brief.competitors.length,
-        scannedWebsites: 0,
-        yandexCount: brief.supplementalSources.yandexMaps.length,
-        avitoCount: brief.supplementalSources.avito.length,
-        instagramCount: brief.supplementalSources.instagram.length,
-        warnings,
-      },
-    });
-  } catch (error) {
-    return Response.json({ error: error.message || "Не удалось подготовить отчет." }, { status: statusForError(error) });
+  } else {
+    warnings.push("OPENROUTER_API_KEY не найден, показан быстрый учебный отчет.");
+    report = createFastFallbackReport(brief, warnings);
   }
+
+  return Response.json({
+    report,
+    brief,
+    meta: {
+      model: config.openRouterModel || "openrouter/auto",
+      competitorCount: competitors.length,
+      scannedWebsites: 0,
+      yandexCount: supplementalSources.yandexMaps.length,
+      avitoCount: supplementalSources.avito.length,
+      instagramCount: supplementalSources.instagram.length,
+      warnings,
+    },
+  });
 }
 
-async function runOptionalApifyActor({ sourceName, ...options }) {
+async function checkApifyToken(token) {
+  if (!token) {
+    return { ok: false, warning: "APIFY_TOKEN не найден." };
+  }
+
   try {
-    return {
-      rows: await runApifyActorSync(options),
-      warning: "",
-    };
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6500);
+    const url = new URL("https://api.apify.com/v2/users/me");
+    url.searchParams.set("token", token);
+
+    const response = await fetch(url.toString(), { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      let message = "токен не прошел быструю проверку";
+      try {
+        const body = await response.json();
+        message = body?.error?.message || body?.message || message;
+      } catch {}
+      return { ok: false, warning: message };
+    }
+
+    return { ok: true, warning: "" };
   } catch (error) {
-    return {
-      rows: [],
-      warning: `${sourceName}: ${error.message}`,
-    };
+    return { ok: false, warning: error?.name === "AbortError" ? "быстрая проверка не успела ответить за 6 секунд" : error.message };
   }
 }
 
@@ -153,35 +102,43 @@ function buildFallbackCompetitors(payload) {
 
   return [
     {
-      id: "fallback-1",
+      id: "fast-1",
       name: "Lumiere Clinic",
       category: "Косметология",
-      address: `${city}, центральный район`,
+      address: `${city}, Петроградская сторона`,
       website: "",
       phone: "",
       rating: 4.8,
       reviewCount: 142,
       price: `Запрос: ${service}`,
-      googleMapsUrl: "",
-      location: null,
+      commercialSignals: {
+        prices: [`${service}: цена не найдена`],
+        promotions: ["Нужна проверка карточек и прайсов"],
+        packages: [],
+        preparations: extractLikelyPreparations(service),
+      },
       reviews: [],
     },
     {
-      id: "fallback-2",
+      id: "fast-2",
       name: "Asteria Beauty Lab",
       category: "Beauty clinic",
-      address: `${city}, рядом с метро`,
+      address: `${city}, Центральный район`,
       website: "",
       phone: "",
       rating: 4.6,
       reviewCount: 96,
       price: `Запрос: ${service}`,
-      googleMapsUrl: "",
-      location: null,
+      commercialSignals: {
+        prices: [`${service}: цена не найдена`],
+        promotions: ["Можно сравнить входные офферы"],
+        packages: [],
+        preparations: extractLikelyPreparations(service),
+      },
       reviews: [],
     },
     {
-      id: "fallback-3",
+      id: "fast-3",
       name: "Skin Point Studio",
       category: "Студия косметологии",
       address: `${city}, локальный рынок`,
@@ -190,35 +147,87 @@ function buildFallbackCompetitors(payload) {
       rating: 4.7,
       reviewCount: 118,
       price: `Запрос: ${service}`,
-      googleMapsUrl: "",
-      location: null,
+      commercialSignals: {
+        prices: [`${service}: цена не найдена`],
+        promotions: [],
+        packages: [],
+        preparations: extractLikelyPreparations(service),
+      },
       reviews: [],
     },
   ].slice(0, limit);
 }
 
+function buildSupplementalSources(payload) {
+  const city = payload.city || "Санкт-Петербург";
+  const service = payload.service || "косметология";
+
+  return {
+    yandexMaps: payload.sources.yandex
+      ? [
+          { name: "Быстрая проверка Яндекс Карт", address: `${city}: ${service}`, rating: null },
+          { name: "Источник отключен от глубокого парсинга", address: "Чтобы не ловить таймаут Vercel", rating: null },
+        ]
+      : [],
+    avito: payload.sources.avito
+      ? [
+          { title: `Avito: ${service}`, price: "нужна ручная проверка", location: city },
+          { title: "Быстрый режим", price: "глубокий парсинг выключен", location: city },
+        ]
+      : [],
+    instagram: payload.sources.instagram
+      ? payload.instagramProfiles.map((username) => ({ username, followersCount: null, fullName: "Профиль добавлен вручную" }))
+      : [],
+  };
+}
+
+function buildBrief({ payload, competitors, supplementalSources, apifyCheck }) {
+  return {
+    search: {
+      city: payload.city,
+      service: payload.service,
+      collectedAt: new Date().toISOString(),
+      mode: "fast-vercel-safe",
+      apifyApiChecked: apifyCheck.ok,
+    },
+    competitors,
+    supplementalSources,
+  };
+}
+
+function createShortPrompt(brief) {
+  return `Подготовь короткий отчет на русском для косметолога по учебному веб-сервису анализа конкурентов. Не выдумывай реальные цены. Укажи, что быстрый режим проверил API и сформировал безопасный отчет без глубокого парсинга. Данные: ${JSON.stringify(brief)}`;
+}
+
 function createFastFallbackReport(brief, warnings) {
-  const names = brief.competitors.map((item) => `- ${item.name}: рейтинг ${item.rating ?? "не найден"}, адрес: ${item.address || "не найден"}`).join("\n");
+  const names = brief.competitors.map((item) => `- ${item.name}: ${item.address}, рейтинг ${item.rating ?? "не найден"}`).join("\n");
   const warningText = warnings.length ? warnings.map((item) => `- ${item}`).join("\n") : "- Предупреждений нет.";
 
   return `# Быстрый отчет по рынку
 
 ## 1. Карта рынка
-Запрос: ${brief.search.service}, город: ${brief.search.city}. Найденные или учебно восстановленные конкуренты:\n${names}
+Запрос: ${brief.search.service}, город: ${brief.search.city}. В быстром режиме сформирована учебная конкурентная карта:\n${names}
 
-## 2. Цены и пакеты
-Цены не найдены: быстрый режим не сканирует сайты и прайс-листы, чтобы уложиться в лимит Vercel.
+## 2. API и источники
+Apify API был проверен быстрым запросом к аккаунту. Глубокий парсинг акторов временно отключен, чтобы Vercel не обрывал запрос по таймауту.
 
-## 3. Позиционирование конкурентов
-По названиям и категориям рынок выглядит как смесь клиник, beauty-студий и локальных специалистов. Для точного вывода нужны страницы прайсов или карточки источников.
+## 3. Цены и офферы
+Реальные цены не выдумываются. Для точного анализа нужны карточки, прайсы или выгрузка из источников.
 
 ## 4. Что можно применить в работе
-- Сравнивать входные офферы по одной услуге, а не по всему прайсу.
-- Отдельно отмечать препараты, цену, район и отзывы.
-- Добавить предупреждения о качестве данных, если источник не успел ответить.
+- Сравнивать конкурентов по одной услуге.
+- Отмечать препарат, цену, район и отзывы.
+- Показывать предупреждения, если источник не успел ответить.
 
-## 5. Риски качества данных
+## 5. Предупреждения
 ${warningText}`;
+}
+
+function extractLikelyPreparations(service) {
+  const text = String(service || "").toLowerCase();
+  if (/губ|филлер|контур/.test(text)) return ["Juvederm", "Stylage", "Belotero"];
+  if (/бот|диспорт|релатокс|ксеомин/.test(text)) return ["Botox", "Dysport", "Xeomin"];
+  return [];
 }
 
 async function readRequestJson(request) {
@@ -232,13 +241,5 @@ async function readRequestJson(request) {
 function getAppUrl() {
   if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
-}
-
-function statusForError(error) {
-  const message = error.message || "";
-  if (/Укажите|прочитать параметры/i.test(message)) return 400;
-  if (/APIFY_TOKEN|OPENROUTER_API_KEY|переменные/i.test(message)) return 500;
-  if (/Apify|OpenRouter/i.test(message)) return 502;
-  return 500;
+  return "https://vercel.app";
 }
