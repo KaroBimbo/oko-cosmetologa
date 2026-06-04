@@ -15,7 +15,7 @@ test("validates the analyze form payload with safe defaults", () => {
   assert.deepEqual(payload, {
     city: "Санкт-Петербург",
     service: "контурная пластика",
-    limit: 20,
+    limit: 5,
     instagramProfiles: ["clinic_linia", "doctor.skin.spb"],
     sources: { instagram: true, avito: false, yandex: true },
   });

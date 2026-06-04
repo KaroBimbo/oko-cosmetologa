@@ -3,12 +3,14 @@ import assert from "node:assert/strict";
 
 import {
   buildAvitoActorInput,
+  buildFallbackMapsRows,
   buildMapsActorInput,
   buildCrawlerInput,
   buildInstagramProfileInput,
   buildYandexMapsActorInput,
   clampCompetitorLimit,
   createAnalysisPrompt,
+  createLocalAnalysisReport,
   extractCommercialSignals,
   extractInstagramUsernames,
   normalizeAvitoListings,
@@ -20,9 +22,9 @@ import {
 
 test("clamps competitor limit to the safe homework range", () => {
   assert.equal(clampCompetitorLimit(0), 1);
-  assert.equal(clampCompetitorLimit(8), 8);
-  assert.equal(clampCompetitorLimit("31"), 20);
-  assert.equal(clampCompetitorLimit(undefined), 20);
+  assert.equal(clampCompetitorLimit(5), 5);
+  assert.equal(clampCompetitorLimit("31"), 5);
+  assert.equal(clampCompetitorLimit(undefined), 5);
 });
 
 test("builds a bounded Apify Google Maps input for local cosmetic research", () => {
@@ -35,16 +37,25 @@ test("builds a bounded Apify Google Maps input for local cosmetic research", () 
     {
       searchStringsArray: ["контурная пластика косметология"],
       locationQuery: "Санкт-Петербург",
-      maxCrawledPlacesPerSearch: 12,
+      maxCrawledPlacesPerSearch: 5,
       language: "ru",
       skipClosedPlaces: true,
-      scrapePlaceDetailPage: true,
-      maxReviews: 10,
-      reviewsSort: "newest",
-      reviewsOrigin: "google",
+      scrapePlaceDetailPage: false,
       website: "allPlaces",
     },
   );
+});
+
+test("builds fallback Google Maps rows that still look like beauty competitors", () => {
+  const rows = buildFallbackMapsRows({
+    city: "Санкт-Петербург",
+    service: "контурная пластика",
+    limit: 12,
+  });
+
+  assert.equal(rows.length, 5);
+  assert.equal(normalizePlaces(rows).length, 5);
+  assert.match(rows[0].address, /Санкт-Петербург/);
 });
 
 test("normalizes Apify place rows without leaking irrelevant or closed places", () => {
@@ -151,6 +162,26 @@ test("creates an LLM prompt that forbids invented prices", () => {
   assert.match(prompt, /Клиника Линия/);
 });
 
+test("creates a local fallback report without inventing missing prices", () => {
+  const report = createLocalAnalysisReport({
+    search: { city: "Санкт-Петербург", service: "контурная пластика", collectedAt: "2026-06-02T20:00:00.000Z" },
+    limits: { competitors: 5, websites: 3, reviewsPerCompetitor: 1 },
+    competitors: [
+      {
+        name: "Клиника Линия",
+        category: "Косметология",
+        address: "Невский проспект, 10",
+        rating: 4.7,
+        commercialSignals: { prices: ["цена не найдена"], promotions: [], preparations: [] },
+      },
+    ],
+  });
+
+  assert.match(report, /Быстрый отчет/);
+  assert.match(report, /Клиника Линия/);
+  assert.match(report, /Цена не найдена/);
+});
+
 test("builds bounded crawler input for competitor websites only", () => {
   const input = buildCrawlerInput([
     { website: "https://clinic-one.example" },
@@ -162,7 +193,7 @@ test("builds bounded crawler input for competitor websites only", () => {
     { url: "https://clinic-one.example" },
     { url: "https://clinic-two.example" },
   ]);
-  assert.equal(input.maxCrawlPages, 12);
+  assert.equal(input.maxCrawlPages, 4);
   assert.equal(input.maxCrawlDepth, 1);
   assert.equal(input.crawlerType, "playwright:adaptive");
 });
@@ -176,7 +207,7 @@ test("builds Yandex Maps actor input with the same city and service intent", () 
     }),
     {
       searchQueries: ["контурная пластика косметология Санкт-Петербург"],
-      maxLeads: 14,
+      maxLeads: 5,
       lang: "ru_RU",
       proxyConfiguration: { useApifyProxy: true },
     },

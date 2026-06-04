@@ -34,6 +34,7 @@ import VantaTopologyBackground from "@/components/VantaTopologyBackground";
 
 const DEFAULT_CITY = "Санкт-Петербург";
 const DEFAULT_SERVICE = "контурная пластика";
+const SAFE_COMPETITOR_LIMIT = 5;
 
 const SOURCE_OPTIONS = [
   { id: "yandex", label: "Яндекс Карты", detail: "локальные карточки" },
@@ -136,7 +137,7 @@ const iconHover = {
 export default function Home() {
   const [city, setCity] = useState(DEFAULT_CITY);
   const [service, setService] = useState(DEFAULT_SERVICE);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(SAFE_COMPETITOR_LIMIT);
   const [instagramProfiles, setInstagramProfiles] = useState("");
   const [sources, setSources] = useState({ yandex: true, avito: true, instagram: true });
   const [state, setState] = useState("idle");
@@ -215,12 +216,7 @@ export default function Home() {
           <div>
             <div className="page-title-block">
               <p className="eyebrow">Рабочая панель</p>
-              <h1 className="hero-title" aria-label="Око косметолога">
-                <span className="hero-title-first-o" aria-hidden="true">
-                  О
-                </span>
-                <span aria-hidden="true">ко косметолога</span>
-              </h1>
+              <h1>Анализ конкурентов</h1>
             </div>
             <p className="topbar-subtitle">Цены, препараты, акции и источники конкурентов в одном AI-отчёте.</p>
           </div>
@@ -287,7 +283,7 @@ export default function Home() {
 
               <label className="field limit-field">
                 <span>Лимит конкурентов</span>
-                <input type="number" min="1" max="20" value={limit} onChange={(event) => setLimit(event.target.value)} />
+                <input type="number" min="1" max={SAFE_COMPETITOR_LIMIT} value={limit} onChange={(event) => setLimit(event.target.value)} />
               </label>
 
               <label className="field instagram-field">
@@ -327,7 +323,7 @@ export default function Home() {
             </div>
 
             <div className="source-summary">
-              <Metric label="Лимит" value={`до ${limit || 20}`} />
+              <Metric label="Лимит" value={`до ${limit || SAFE_COMPETITOR_LIMIT}`} />
               <Metric label="Проверка сайтов" value="10 сайтов" />
               <Metric label="AI-модель" value="OpenRouter" />
             </div>
