@@ -145,7 +145,7 @@ export default function Home() {
   const [result, setResult] = useState(null);
   const [activeTab, setActiveTab] = useState("results");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSoftMode, setIsSoftMode] = useState(false);
+  const [isNightMode, setIsNightMode] = useState(false);
 
   const displayCompetitors = result?.brief?.competitors?.length ? result.brief.competitors : mockCompetitors;
   const displaySources = result?.brief?.supplementalSources || mockSources;
@@ -206,7 +206,7 @@ export default function Home() {
   }
 
   return (
-    <main className={isSoftMode ? "app-shell soft-mode" : "app-shell"}>
+    <main className={isNightMode ? "app-shell night-mode" : "app-shell"}>
       <VantaTopologyBackground backgroundColor={0xf7d7df} className="page-vanta-background" color={0x9a5be6} />
       <MobileTopbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
@@ -222,16 +222,15 @@ export default function Home() {
           </div>
           <div className="topbar-actions">
             <motion.button
-              aria-label={isSoftMode ? "Выключить мягкий режим" : "Включить мягкий режим"}
-              aria-pressed={isSoftMode}
-              className={isSoftMode ? "mode-button active" : "mode-button"}
-              onClick={() => setIsSoftMode((value) => !value)}
-              title={isSoftMode ? "Выключить мягкий режим" : "Включить мягкий режим"}
+              aria-label={isNightMode ? "Выключить ночной режим" : "Включить ночной режим"}
+              aria-pressed={isNightMode}
+              className={isNightMode ? "mode-button active" : "mode-button"}
+              onClick={() => setIsNightMode((value) => !value)}
+              title={isNightMode ? "Выключить ночной режим" : "Включить ночной режим"}
               type="button"
               whileTap={tapMotion}
             >
               <Moon size={18} />
-              <span className="mode-button-label">Мягкий режим</span>
             </motion.button>
             <motion.button className="new-analysis-button cta-button" onClick={startNewAnalysis} type="button" whileTap={tapMotion}>
               <Plus size={18} />
