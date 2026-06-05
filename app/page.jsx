@@ -221,8 +221,17 @@ export default function Home() {
             <p className="topbar-subtitle">Цены, препараты, акции и источники конкурентов в одном AI-отчёте.</p>
           </div>
           <div className="topbar-actions">
-            <motion.button className="mode-button" onClick={() => setIsSoftMode((value) => !value)} type="button" whileTap={tapMotion}>
+            <motion.button
+              aria-label={isSoftMode ? "Выключить мягкий режим" : "Включить мягкий режим"}
+              aria-pressed={isSoftMode}
+              className={isSoftMode ? "mode-button active" : "mode-button"}
+              onClick={() => setIsSoftMode((value) => !value)}
+              title={isSoftMode ? "Выключить мягкий режим" : "Включить мягкий режим"}
+              type="button"
+              whileTap={tapMotion}
+            >
               <Moon size={18} />
+              <span className="mode-button-label">Мягкий режим</span>
             </motion.button>
             <motion.button className="new-analysis-button cta-button" onClick={startNewAnalysis} type="button" whileTap={tapMotion}>
               <Plus size={18} />

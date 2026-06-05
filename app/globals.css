@@ -174,14 +174,31 @@ button {
 }
 
 .soft-mode {
-  --primary: #8c45cc;
-  --primary-2: #bd70df;
-  --accent: #ecaccf;
+  --bg: #f5eafb;
+  --bg-soft: #fff3fb;
+  --card: #fff8fc;
+  --card-accent: #efdff7;
+  --text: #24152d;
+  --text-muted: #6f5e79;
+  --border: #dfc6e8;
+  --primary: #6f2fb0;
+  --primary-2: #a85ed7;
+  --accent: #e59ec3;
   --accent-deep: var(--primary);
   --accent-pink: var(--accent);
-  --aura: rgba(140, 69, 204, 0.24);
-  --aura-pink: rgba(236, 172, 207, 0.24);
+  --surface-lilac: var(--card-accent);
+  --aura: rgba(111, 47, 176, 0.28);
+  --aura-pink: rgba(229, 158, 195, 0.28);
   --primary-gradient: linear-gradient(135deg, var(--primary), var(--primary-2) 54%, var(--accent));
+}
+
+.app-shell.soft-mode {
+  background:
+    radial-gradient(circle at 82% 8%, rgba(229, 158, 195, 0.24), transparent 28%),
+    radial-gradient(circle at 16% 78%, rgba(111, 47, 176, 0.18), transparent 30%),
+    radial-gradient(circle at 58% 100%, rgba(241, 185, 146, 0.18), transparent 32%),
+    linear-gradient(90deg, rgba(255, 250, 253, 0.86), rgba(252, 238, 249, 0.5) 36%, rgba(250, 224, 238, 0.56)),
+    linear-gradient(135deg, rgba(245, 234, 251, 0.88) 0%, rgba(255, 243, 251, 0.68) 100%);
 }
 
 .mobile-topbar {
@@ -494,9 +511,11 @@ h2 {
 }
 
 .topbar-actions {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .mode-button,
@@ -515,12 +534,35 @@ h2 {
 }
 
 .mode-button {
-  width: 44px;
+  min-width: 44px;
   height: 44px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
   border-radius: 16px;
   color: var(--accent-deep);
   background: rgba(255, 250, 253, 0.86);
   box-shadow: 0 12px 28px rgba(72, 32, 103, 0.1);
+  font-size: 0.82rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.mode-button.active {
+  color: #fffafd;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 36%),
+    var(--primary-gradient);
+  box-shadow:
+    0 16px 34px rgba(111, 47, 176, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.44);
+}
+
+.mode-button-label {
+  position: relative;
+  z-index: 1;
 }
 
 .new-analysis-button,
@@ -1508,10 +1550,12 @@ dd {
 }
 
 .dashboard-tabs {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: auto auto minmax(190px, max-content);
+  gap: 10px;
   align-items: center;
-  margin: 14px 0;
+  margin: 20px 0 18px;
+  padding: 0 2px;
 }
 
 .dashboard-tabs button {
@@ -1542,7 +1586,8 @@ dd {
 }
 
 .download-button {
-  margin-left: auto;
+  justify-self: end;
+  margin-left: 0;
   border: 0;
 }
 
@@ -1739,6 +1784,10 @@ dd {
   padding-right: 4px;
 }
 
+.competitors-panel {
+  container-type: inline-size;
+}
+
 .report-body {
   display: grid;
   gap: 10px;
@@ -1783,9 +1832,8 @@ dd {
 
 .table-head,
 .table-row {
-  min-width: 640px;
   display: grid;
-  grid-template-columns: minmax(180px, 1.4fr) 80px minmax(220px, 1.6fr) 120px;
+  grid-template-columns: minmax(168px, 1.35fr) 74px minmax(180px, 1.55fr) 86px;
   gap: 12px;
   align-items: center;
 }
@@ -1882,6 +1930,52 @@ dd {
   font-weight: 850;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@container (max-width: 720px) {
+  .competitors-panel .competitor-table {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .table-head {
+    display: none;
+  }
+
+  .table-row {
+    min-width: 0;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .table-clinic strong {
+    font-size: 0.98rem;
+  }
+
+  .table-rating,
+  .table-price,
+  .table-source {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+
+  .table-rating::before,
+  .table-price::before,
+  .table-source::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+
+  .table-source {
+    justify-content: stretch;
+  }
 }
 
 .donut-card {
@@ -2443,7 +2537,7 @@ dd {
   }
 
   .topbar-actions {
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   h1 {
@@ -2817,6 +2911,17 @@ dd {
 
   .dashboard-tabs {
     gap: 7px;
+  }
+
+  .topbar-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .mode-button,
+  .new-analysis-button {
+    width: 100%;
   }
 
   .table-rating,
