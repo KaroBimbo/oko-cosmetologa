@@ -341,9 +341,9 @@ button {
 
 .night-mode .launch-visual-zone {
   background:
-    radial-gradient(circle at 58% 46%, rgba(240, 173, 138, 0.34), transparent 18%),
-    radial-gradient(circle at 50% 50%, rgba(216, 111, 206, 0.34), transparent 34%),
-    radial-gradient(circle at 52% 52%, rgba(126, 67, 208, 0.42), transparent 50%);
+    radial-gradient(circle at 58% 46%, rgba(240, 173, 138, 0.22), transparent 18%),
+    radial-gradient(circle at 50% 50%, rgba(216, 111, 206, 0.24), transparent 34%),
+    radial-gradient(circle at 52% 52%, rgba(126, 67, 208, 0.34), transparent 50%);
 }
 
 .night-mode .launch-visual-zone::after {
@@ -353,7 +353,22 @@ button {
 }
 
 .night-mode .launch-visual-zone .magic-eye-accent {
-  filter: saturate(1.24) contrast(1.1) brightness(0.96) drop-shadow(0 24px 54px rgba(5, 0, 15, 0.34));
+  opacity: 0.66;
+  filter: saturate(0.82) contrast(0.94) brightness(0.76) drop-shadow(0 22px 46px rgba(5, 0, 15, 0.28));
+}
+
+.night-mode .magic-eye-glow {
+  background:
+    radial-gradient(circle at 40% 47%, rgba(240, 173, 138, 0.22), transparent 36%),
+    radial-gradient(circle at 48% 50%, rgba(216, 111, 206, 0.26), transparent 50%),
+    radial-gradient(circle at 60% 44%, rgba(126, 67, 208, 0.36), transparent 62%);
+  filter: blur(72px);
+  opacity: 0.7;
+}
+
+.night-mode .launch-visual-zone .magic-eye-lottie {
+  opacity: 0.82;
+  mix-blend-mode: normal;
 }
 
 .night-mode :is(.hero-tags span, .status-pill, .snapshot-card, .metric, .source-toggle, .dashboard-tabs button, .pulse-card, .report-hero, .table-row, .insight-item, .source-card, .promotion-list article, .preparation-chart-shell, .preparation-breakdown div) {
@@ -3142,6 +3157,11 @@ dd {
     height: 285px;
     opacity: 0.9;
     transform: translateY(-50%);
+  }
+
+  .night-mode .launch-visual-zone .magic-eye-accent {
+    opacity: 0.56;
+    filter: saturate(0.78) contrast(0.92) brightness(0.72) drop-shadow(0 18px 36px rgba(5, 0, 15, 0.24));
   }
 
   .launch-card-head {
