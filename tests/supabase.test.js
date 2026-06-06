@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createBrowserSupabaseClient, getAuthRedirectUrl, getSupabaseConfig } from "../lib/supabase.js";
+import {
+  createBrowserSupabaseClient,
+  getAuthRedirectUrl,
+  getSupabaseConfig,
+  getSupabasePublicEnv,
+} from "../lib/supabase.js";
 
 test("detects missing Supabase public config without crashing the app", () => {
   assert.deepEqual(getSupabaseConfig({}), {
@@ -25,6 +30,22 @@ test("creates Supabase config from public environment variables", () => {
       url: "https://project.supabase.co",
     },
   );
+});
+
+test("reads Supabase public variables through explicit Next.js env keys", () => {
+  const previousUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const previousAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://demo.supabase.co";
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "demo-key";
+
+  assert.deepEqual(getSupabasePublicEnv(), {
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: "demo-key",
+    NEXT_PUBLIC_SUPABASE_URL: "https://demo.supabase.co",
+  });
+
+  process.env.NEXT_PUBLIC_SUPABASE_URL = previousUrl;
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = previousAnonKey;
 });
 
 test("builds a safe auth redirect URL from the current browser origin", () => {
