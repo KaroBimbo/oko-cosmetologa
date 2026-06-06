@@ -36,6 +36,8 @@ npm run dev -- -p 3006
    - `APIFY_TOKEN`
    - `OPENROUTER_API_KEY`
    - `OPENROUTER_MODEL`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - при необходимости actor overrides из `.env.example`
    - для расширенного мониторинга РФ можно дополнительно заполнить `APIFY_2GIS_ACTOR`, `APIFY_ZOON_ACTOR`, `APIFY_PRODOCTOROV_ACTOR`, `APIFY_NAPOPRAVKU_ACTOR`, `APIFY_VK_ACTOR`, `APIFY_TELEGRAM_ACTOR`, `APIFY_WORDSTAT_ACTOR`
 3. Нажать Deploy.
@@ -52,4 +54,6 @@ npm run dev -- -p 3006
 - Есть серверный route `POST /api/analyze`, чтобы API-ключи не попадали в браузер.
 - Есть сбор через Apify, анализ через OpenRouter и вывод результата на сайте.
 - Добавлены источники для российского рынка косметологии: 2ГИС, Zoon, ПроДокторов, НаПоправку, Yell, VK, Telegram и Wordstat.
+- Добавлены тесты основных возможностей сервиса и Supabase-конфига.
+- Добавлена регистрация/вход/выход через Supabase Auth.
 - Есть обработка ошибок, демо-данные и предупреждения о неполных данных.

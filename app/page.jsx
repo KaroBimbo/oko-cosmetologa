@@ -29,6 +29,7 @@ import { Clock as AnimatedClock } from "@/components/animate-ui/icons/clock";
 import { Menu as AnimatedMenu } from "@/components/animate-ui/icons/menu";
 import { Settings as AnimatedSettings } from "@/components/animate-ui/icons/settings";
 import { Sparkles as AnimatedSparkles } from "@/components/animate-ui/icons/sparkles";
+import AuthPanel from "@/components/AuthPanel";
 import MagicEyeAccent from "@/components/MagicEyeAccent";
 import VantaTopologyBackground from "@/components/VantaTopologyBackground";
 
@@ -483,6 +484,8 @@ function Sidebar({ isMenuOpen, setIsMenuOpen }) {
           <p>История анализов, больше источников и расширенные отчеты для переезда или запуска услуги.</p>
           <button type="button">Открыть</button>
         </motion.div>
+
+        <AuthPanel />
       </div>
 
       <div className="profile-mini">

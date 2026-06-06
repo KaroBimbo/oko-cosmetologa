@@ -9,6 +9,7 @@ Premium beauty-tech мини-сервис для домашнего задани
 - Дополнительно может собрать данные из Яндекс Карт, 2ГИС, Zoon, ПроДокторов, НаПоправку, Yell, Avito, Instagram, VK, Telegram и Wordstat через настраиваемые Apify actors.
 - Передает очищенные данные в OpenRouter.
 - Показывает на сайте отчет по ценам, акциям, препаратам, позиционированию и идеям для работы.
+- Позволяет пользователю зарегистрироваться или войти через Supabase Auth.
 - Не выдумывает цены: если прайс не найден, показывает это как пропуск данных.
 
 ## Переменные окружения
@@ -19,7 +20,11 @@ Premium beauty-tech мини-сервис для домашнего задани
 APIFY_TOKEN=your_apify_token
 OPENROUTER_API_KEY=your_openrouter_key
 OPENROUTER_MODEL=openrouter/owl-alpha
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+Supabase-ключи можно добавить позже: без них сайт откроется, а в боковой панели покажет подсказку, что регистрация пока не настроена.
 
 Дополнительные источники уже настроены дефолтами:
 
@@ -61,8 +66,9 @@ npm run dev -- -p 3006
 
 1. Загрузите проект в GitHub или импортируйте папку в Vercel.
 2. В настройках Vercel добавьте `APIFY_TOKEN`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`.
-3. Нажмите Deploy.
-4. Для сдачи отправьте ссылку на опубликованный Vercel-сайт.
+3. Для регистрации добавьте `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` из Supabase Project Settings.
+4. Нажмите Deploy.
+5. Для сдачи отправьте ссылку на опубликованный Vercel-сайт.
 
 ## Быстрый демо-кейс для проверки
 
