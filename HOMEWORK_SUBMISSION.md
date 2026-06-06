@@ -37,6 +37,7 @@ npm run dev -- -p 3006
    - `OPENROUTER_API_KEY`
    - `OPENROUTER_MODEL`
    - при необходимости actor overrides из `.env.example`
+   - для расширенного мониторинга РФ можно дополнительно заполнить `APIFY_2GIS_ACTOR`, `APIFY_ZOON_ACTOR`, `APIFY_PRODOCTOROV_ACTOR`, `APIFY_NAPOPRAVKU_ACTOR`, `APIFY_VK_ACTOR`, `APIFY_TELEGRAM_ACTOR`, `APIFY_WORDSTAT_ACTOR`
 3. Нажать Deploy.
 4. Открыть опубликованную ссылку и сделать один тестовый анализ.
 
@@ -50,4 +51,5 @@ npm run dev -- -p 3006
 - Есть веб-интерфейс для ввода города, услуги, лимита, Instagram-профилей и источников.
 - Есть серверный route `POST /api/analyze`, чтобы API-ключи не попадали в браузер.
 - Есть сбор через Apify, анализ через OpenRouter и вывод результата на сайте.
+- Добавлены источники для российского рынка косметологии: 2ГИС, Zoon, ПроДокторов, НаПоправку, Yell, VK, Telegram и Wordstat.
 - Есть обработка ошибок, демо-данные и предупреждения о неполных данных.

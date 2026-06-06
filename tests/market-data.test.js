@@ -8,14 +8,20 @@ import {
   buildCrawlerInput,
   buildInstagramProfileInput,
   buildYandexMapsActorInput,
+  buildTwoGisActorInput,
+  buildVkActorInput,
+  buildWordstatActorInput,
   clampCompetitorLimit,
   createAnalysisPrompt,
   createLocalAnalysisReport,
   extractCommercialSignals,
   extractInstagramUsernames,
   normalizeAvitoListings,
+  normalizeDirectoryRows,
   normalizeInstagramProfiles,
   normalizePlaces,
+  normalizeSocialRows,
+  normalizeWordstatRows,
   normalizeYandexPlaces,
   prepareCompetitorBrief,
 } from "../lib/market-data.js";
@@ -243,6 +249,29 @@ test("builds Instagram profile actor input from unique usernames", () => {
   });
 });
 
+test("builds optional Russian market source inputs", () => {
+  assert.deepEqual(
+    buildTwoGisActorInput({ city: "Санкт-Петербург", service: "контурная пластика", limit: 9 }),
+    {
+      query: "контурная пластика косметология Санкт-Петербург",
+      searchQuery: "контурная пластика косметология Санкт-Петербург",
+      searchQueries: ["контурная пластика косметология Санкт-Петербург"],
+      city: "Санкт-Петербург",
+      service: "контурная пластика",
+      source: "2gis",
+      maxItems: 5,
+      proxyConfiguration: { useApifyProxy: true },
+    },
+  );
+
+  assert.equal(buildVkActorInput({ city: "СПб", service: "ботокс", limit: 2 }).query, "ботокс косметология СПб");
+  assert.deepEqual(buildWordstatActorInput({ city: "СПб", service: "ботокс", limit: 2 }).phrases, [
+    "ботокс СПб",
+    "ботокс цена",
+    "ботокс косметолог",
+  ]);
+});
+
 test("normalizes supplemental Yandex, Avito, and Instagram rows", () => {
   assert.deepEqual(normalizeYandexPlaces([{ name: "Клиника Север", address: "Петроградская", phone: "+7", rating: 4.6 }]), [
     {
@@ -287,6 +316,43 @@ test("normalizes supplemental Yandex, Avito, and Instagram rows", () => {
   );
 });
 
+test("normalizes Russian directories, social sources, and demand rows", () => {
+  assert.deepEqual(normalizeDirectoryRows([{ title: "Клиника СПБ", minPrice: "от 18 000 ₽", reviewsCount: 42 }]), [
+    {
+      name: "Клиника СПБ",
+      address: "",
+      phone: "",
+      website: "",
+      rating: null,
+      reviewCount: 42,
+      price: "от 18 000 ₽",
+      category: "",
+      url: "",
+      snippet: "",
+    },
+  ]);
+
+  assert.deepEqual(normalizeSocialRows([{ groupName: "Косметология СПб", text: "Акция на вторую зону", membersCount: 2100 }]), [
+    {
+      title: "Косметология СПб",
+      handle: "",
+      url: "",
+      text: "Акция на вторую зону",
+      subscribersCount: 2100,
+      viewsCount: null,
+      publishedAt: "",
+    },
+  ]);
+
+  assert.deepEqual(normalizeWordstatRows([{ phrase: "ботокс цена спб", impressions: 980 }]), [
+    {
+      phrase: "ботокс цена спб",
+      impressions: 980,
+      region: "",
+    },
+  ]);
+});
+
 test("adds supplemental sources to the competitor brief for LLM analysis", () => {
   const brief = prepareCompetitorBrief({
     competitors: [],
@@ -295,12 +361,20 @@ test("adds supplemental sources to the competitor brief for LLM analysis", () =>
     service: "контурная пластика",
     supplementalSources: {
       yandexMaps: [{ name: "Клиника Север", address: "Петроградская" }],
+      twoGis: [{ name: "Клиника 2ГИС", price: "от 19 000 ₽" }],
       avito: [{ title: "Контурная пластика", price: "12 000 ₽" }],
       instagram: [{ username: "clinic_linia", followersCount: 4300 }],
+      prodoctorov: [{ name: "Клиника врачей", rating: 4.8 }],
+      vk: [{ groupName: "Косметология СПб", membersCount: 2100 }],
+      wordstat: [{ phrase: "контурная пластика спб", impressions: 1240 }],
     },
   });
 
   assert.equal(brief.supplementalSources.yandexMaps[0].name, "Клиника Север");
+  assert.equal(brief.supplementalSources.twoGis[0].price, "от 19 000 ₽");
   assert.equal(brief.supplementalSources.avito[0].price, "12 000 ₽");
   assert.equal(brief.supplementalSources.instagram[0].username, "clinic_linia");
+  assert.equal(brief.supplementalSources.prodoctorov[0].rating, 4.8);
+  assert.equal(brief.supplementalSources.vk[0].subscribersCount, 2100);
+  assert.equal(brief.supplementalSources.wordstat[0].impressions, 1240);
 });

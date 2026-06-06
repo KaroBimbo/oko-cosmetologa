@@ -6,7 +6,15 @@ import {
   buildFallbackMapsRows,
   buildInstagramProfileInput,
   buildMapsActorInput,
+  buildNapopravkuActorInput,
+  buildProdoctorovActorInput,
+  buildTelegramActorInput,
+  buildTwoGisActorInput,
+  buildVkActorInput,
+  buildWordstatActorInput,
+  buildYellActorInput,
   buildYandexMapsActorInput,
+  buildZoonActorInput,
   createAnalysisPrompt,
   createLocalAnalysisReport,
   extractInstagramUsernames,
@@ -105,20 +113,131 @@ export async function POST(request) {
               : "",
           });
 
-    const [websiteResult, yandexResult, avitoResult, instagramResult] = await Promise.all([
+    const optionalDirectoryTasks = {
+      twoGis: runConfiguredOptionalSource({
+        actorId: config.twoGisActorId,
+        envName: "APIFY_2GIS_ACTOR",
+        enabled: payload.sources.twoGis,
+        input: buildTwoGisActorInput(payload),
+        sourceName: "2ГИС",
+        token: config.apifyToken,
+      }),
+      zoon: runConfiguredOptionalSource({
+        actorId: config.zoonActorId,
+        envName: "APIFY_ZOON_ACTOR",
+        enabled: payload.sources.zoon,
+        input: buildZoonActorInput(payload),
+        sourceName: "Zoon",
+        token: config.apifyToken,
+      }),
+      prodoctorov: runConfiguredOptionalSource({
+        actorId: config.prodoctorovActorId,
+        envName: "APIFY_PRODOCTOROV_ACTOR",
+        enabled: payload.sources.prodoctorov,
+        input: buildProdoctorovActorInput(payload),
+        sourceName: "ПроДокторов",
+        token: config.apifyToken,
+      }),
+      napopravku: runConfiguredOptionalSource({
+        actorId: config.napopravkuActorId,
+        envName: "APIFY_NAPOPRAVKU_ACTOR",
+        enabled: payload.sources.napopravku,
+        input: buildNapopravkuActorInput(payload),
+        sourceName: "НаПоправку",
+        token: config.apifyToken,
+      }),
+      yell: runConfiguredOptionalSource({
+        actorId: config.yellActorId,
+        envName: "APIFY_YELL_ACTOR",
+        enabled: payload.sources.yell,
+        input: buildYellActorInput(payload),
+        sourceName: "Yell",
+        token: config.apifyToken,
+      }),
+      vk: runConfiguredOptionalSource({
+        actorId: config.vkActorId,
+        envName: "APIFY_VK_ACTOR",
+        enabled: payload.sources.vk,
+        input: buildVkActorInput(payload),
+        sourceName: "VK",
+        token: config.apifyToken,
+      }),
+      telegram: runConfiguredOptionalSource({
+        actorId: config.telegramActorId,
+        envName: "APIFY_TELEGRAM_ACTOR",
+        enabled: payload.sources.telegram,
+        input: buildTelegramActorInput(payload),
+        sourceName: "Telegram",
+        token: config.apifyToken,
+      }),
+      wordstat: runConfiguredOptionalSource({
+        actorId: config.wordstatActorId,
+        envName: "APIFY_WORDSTAT_ACTOR",
+        enabled: payload.sources.wordstat,
+        input: buildWordstatActorInput(payload),
+        sourceName: "Wordstat",
+        token: config.apifyToken,
+      }),
+    };
+
+    const [
+      websiteResult,
+      yandexResult,
+      avitoResult,
+      instagramResult,
+      twoGisResult,
+      zoonResult,
+      prodoctorovResult,
+      napopravkuResult,
+      yellResult,
+      vkResult,
+      telegramResult,
+      wordstatResult,
+    ] = await Promise.all([
       websiteTask,
       yandexTask,
       avitoTask,
       instagramTask,
+      optionalDirectoryTasks.twoGis,
+      optionalDirectoryTasks.zoon,
+      optionalDirectoryTasks.prodoctorov,
+      optionalDirectoryTasks.napopravku,
+      optionalDirectoryTasks.yell,
+      optionalDirectoryTasks.vk,
+      optionalDirectoryTasks.telegram,
+      optionalDirectoryTasks.wordstat,
     ]);
 
     const websitePages = websiteResult.rows;
     const supplementalSources = {
       yandexMaps: yandexResult.rows,
+      twoGis: twoGisResult.rows,
       avito: avitoResult.rows,
       instagram: instagramResult.rows,
+      zoon: zoonResult.rows,
+      prodoctorov: prodoctorovResult.rows,
+      napopravku: napopravkuResult.rows,
+      yell: yellResult.rows,
+      vk: vkResult.rows,
+      telegram: telegramResult.rows,
+      wordstat: wordstatResult.rows,
     };
-    warnings.push(...[websiteResult.warning, yandexResult.warning, avitoResult.warning, instagramResult.warning].filter(Boolean));
+    warnings.push(
+      ...[
+        websiteResult.warning,
+        yandexResult.warning,
+        avitoResult.warning,
+        instagramResult.warning,
+        twoGisResult.warning,
+        zoonResult.warning,
+        prodoctorovResult.warning,
+        napopravkuResult.warning,
+        yellResult.warning,
+        vkResult.warning,
+        telegramResult.warning,
+        wordstatResult.warning,
+      ].filter(Boolean),
+    );
 
     const brief = prepareCompetitorBrief({
       competitors,
@@ -143,8 +262,16 @@ export async function POST(request) {
         competitorCount: brief.competitors.length,
         scannedWebsites: crawlerInput.startUrls.length,
         yandexCount: brief.supplementalSources.yandexMaps.length,
+        twoGisCount: brief.supplementalSources.twoGis.length,
         avitoCount: brief.supplementalSources.avito.length,
         instagramCount: brief.supplementalSources.instagram.length,
+        medicalAggregatorCount:
+          brief.supplementalSources.zoon.length +
+          brief.supplementalSources.prodoctorov.length +
+          brief.supplementalSources.napopravku.length +
+          brief.supplementalSources.yell.length,
+        socialSignalCount: brief.supplementalSources.vk.length + brief.supplementalSources.telegram.length,
+        demandSignalCount: brief.supplementalSources.wordstat.length,
         warnings,
       },
     });
@@ -207,6 +334,25 @@ async function runOptionalApifyActor({ sourceName, ...options }) {
       warning: `${sourceName}: ${friendlySourceError(error)}`,
     };
   }
+}
+
+function runConfiguredOptionalSource({ actorId, enabled, envName, sourceName, token, input }) {
+  if (!enabled) return Promise.resolve({ rows: [], warning: "" });
+  if (!actorId) {
+    return Promise.resolve({
+      rows: [],
+      warning: `${sourceName}: источник включен, но actor не настроен. Добавьте ${envName} в переменные окружения Vercel/локального проекта.`,
+    });
+  }
+
+  return runOptionalApifyActor({
+    actorId,
+    token,
+    input,
+    timeoutSeconds: OPTIONAL_SOURCE_TIMEOUT_SECONDS,
+    requestTimeoutMs: OPTIONAL_REQUEST_TIMEOUT_MS,
+    sourceName,
+  });
 }
 
 function friendlySourceError(error) {

@@ -38,9 +38,19 @@ const SAFE_COMPETITOR_LIMIT = 5;
 
 const SOURCE_OPTIONS = [
   { id: "yandex", label: "Яндекс Карты", detail: "локальные карточки" },
+  { id: "twoGis", label: "2ГИС", detail: "карты, отзывы и цены" },
+  { id: "zoon", label: "Zoon", detail: "прайсы и отзывы" },
+  { id: "prodoctorov", label: "ПроДокторов", detail: "клиники, врачи, цены" },
+  { id: "napopravku", label: "НаПоправку", detail: "медицинские карточки" },
+  { id: "yell", label: "Yell", detail: "отзывы и локальный рейтинг" },
   { id: "avito", label: "Avito", detail: "объявления и предложения" },
   { id: "instagram", label: "Instagram", detail: "профили клиник" },
+  { id: "vk", label: "VK", detail: "посты, акции, активность" },
+  { id: "telegram", label: "Telegram", detail: "каналы и обсуждения" },
+  { id: "wordstat", label: "Wordstat", detail: "спрос и формулировки" },
 ];
+
+const DEFAULT_SOURCES = Object.fromEntries(SOURCE_OPTIONS.map((source) => [source.id, true]));
 
 const IRIS_IMAGE_URL = "/assets/iris-market-bg.png";
 const BRAND_LOGO_URL = "/assets/oko-cosmetologa-mark.png";
@@ -109,6 +119,26 @@ const mockSources = {
     { name: "Lumiere Clinic", address: "Петроградская сторона", rating: 4.8 },
     { name: "Asteria Beauty Lab", address: "Центральный район", rating: 4.6 },
   ],
+  twoGis: [
+    { name: "Forma Skin Atelier", address: "Московский проспект", rating: 4.9, reviewCount: 94 },
+    { name: "Clevermed", address: "Невский район", rating: 4.7, price: "Full Face от 36 000 ₽" },
+  ],
+  zoon: [
+    { name: "Lumiere Clinic", price: "Контурная пластика губ от 18 900 ₽", reviewCount: 46 },
+    { name: "Epil.Zone", price: "Ботулинотерапия Релатокс от 280 ₽/ед.", reviewCount: 31 },
+  ],
+  prodoctorov: [
+    { name: "W Clinic", price: "Коррекция гипергидроза от 28 000 ₽", rating: 4.6 },
+    { name: "Эпилиум Клиник", price: "Лазерная косметология от 750 ₽", rating: 4.8 },
+  ],
+  napopravku: [
+    { name: "Институт красоты СПИК", address: "Санкт-Петербург", rating: 4.7 },
+    { name: "NuAnce", address: "Выборгский район", rating: 4.5 },
+  ],
+  yell: [
+    { name: "SkySkin Clinic", snippet: "Сильный спрос на лазерную эпиляцию и аппаратную косметологию" },
+    { name: "ProForma", snippet: "Отзывы чаще хвалят сервис и понятную запись" },
+  ],
   avito: [
     { title: "Контурная пластика губ", price: "от 12 000 ₽", location: "СПб" },
     { title: "Коррекция подбородка", price: "от 15 500 ₽", location: "СПб" },
@@ -116,6 +146,18 @@ const mockSources = {
   instagram: [
     { username: "lumiere.clinic", followersCount: 8200 },
     { username: "asteria.skin", followersCount: 5400 },
+  ],
+  vk: [
+    { title: "Lumiere Clinic", text: "Акция на вторую зону и бесплатная консультация при записи", subscribersCount: 3400 },
+    { title: "Asteria Beauty Lab", text: "Посты с кейсами до/после и препаратами", subscribersCount: 2100 },
+  ],
+  telegram: [
+    { title: "Beauty SPB Deals", text: "Обсуждают цены на ботулинотерапию и контурную пластику", subscribersCount: 1800 },
+    { title: "Косметология СПб", text: "Частые вопросы про препараты и безопасность", subscribersCount: 2300 },
+  ],
+  wordstat: [
+    { phrase: "контурная пластика губ спб", impressions: 1240 },
+    { phrase: "ботокс цена санкт петербург", impressions: 980 },
   ],
 };
 
@@ -139,7 +181,7 @@ export default function Home() {
   const [service, setService] = useState(DEFAULT_SERVICE);
   const [limit, setLimit] = useState(SAFE_COMPETITOR_LIMIT);
   const [instagramProfiles, setInstagramProfiles] = useState("");
-  const [sources, setSources] = useState({ yandex: true, avito: true, instagram: true });
+  const [sources, setSources] = useState(DEFAULT_SOURCES);
   const [state, setState] = useState("idle");
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
@@ -332,7 +374,7 @@ export default function Home() {
 
             <div className="source-summary">
               <Metric label="Лимит" value={`до ${limit || SAFE_COMPETITOR_LIMIT}`} />
-              <Metric label="Проверка сайтов" value="10 сайтов" />
+              <Metric label="Рынок РФ" value="карты + агрегаторы" />
               <Metric label="AI-модель" value="OpenRouter" />
             </div>
 
@@ -461,19 +503,25 @@ function ResultsDashboard({ chartData, competitors, isRealResult, priceInsights,
     competitorCount: competitors.length,
     scannedWebsites: 10,
     yandexCount: 2,
+    twoGisCount: 2,
     avitoCount: 2,
     instagramCount: 2,
+    medicalAggregatorCount: 8,
+    socialSignalCount: 4,
+    demandSignalCount: 2,
     warnings: [],
   };
+  const mapSignals = (meta.yandexCount || 0) + (meta.twoGisCount || 0);
+  const socialSignals = (meta.instagramCount || 0) + (meta.socialSignalCount || 0);
 
   return (
     <motion.section animate="visible" className="results-zone" initial="hidden" transition={transition} variants={entrance}>
       <div className="summary-row">
         <Metric icon={Star} label="Конкурентов" value={meta.competitorCount} />
         <Metric icon={DatabaseZap} label="Сайтов" value={meta.scannedWebsites} />
-        <Metric icon={BadgeCheck} label="Яндекс" value={meta.yandexCount || 0} />
-        <Metric icon={Flame} label="Avito" value={meta.avitoCount || 0} />
-        <Metric icon={Activity} label="Instagram" value={meta.instagramCount || 0} />
+        <Metric icon={BadgeCheck} label="Карты" value={mapSignals} />
+        <Metric icon={Flame} label="Медагрегаторы" value={meta.medicalAggregatorCount || 0} />
+        <Metric icon={Activity} label="Соцсети / спрос" value={socialSignals + (meta.demandSignalCount || 0)} />
       </div>
 
       <div className="result-grid">
@@ -520,11 +568,31 @@ function SourcesDashboard({ sources }) {
   return (
     <motion.section animate="visible" className="sources-dashboard" initial="hidden" transition={transition} variants={entrance}>
       <SourceColumn items={sources.yandexMaps || []} label="Яндекс Карты" mapper={(place) => [place.name, place.address || place.phone]} />
+      <SourceColumn items={sources.twoGis || []} label="2ГИС" mapper={(place) => [place.name, place.price || place.address || `${place.reviewCount || 0} отзывов`]} />
+      <SourceColumn items={sources.zoon || []} label="Zoon" mapper={(place) => [place.name, place.price || place.snippet || `${place.reviewCount || 0} отзывов`]} />
+      <SourceColumn items={sources.prodoctorov || []} label="ПроДокторов" mapper={(place) => [place.name, place.price || place.address || `${place.rating || "нет"} рейтинг`]} />
+      <SourceColumn items={sources.napopravku || []} label="НаПоправку" mapper={(place) => [place.name, place.price || place.address || `${place.rating || "нет"} рейтинг`]} />
+      <SourceColumn items={sources.yell || []} label="Yell" mapper={(place) => [place.name, place.snippet || place.address || `${place.reviewCount || 0} отзывов`]} />
       <SourceColumn items={sources.avito || []} label="Avito" mapper={(listing) => [listing.title, listing.price || listing.location]} />
       <SourceColumn
         items={sources.instagram || []}
         label="Instagram"
         mapper={(profile) => [`@${profile.username}`, profile.followersCount ? `${profile.followersCount} подписчиков` : profile.fullName]}
+      />
+      <SourceColumn
+        items={sources.vk || []}
+        label="VK"
+        mapper={(post) => [post.title || post.handle || "VK сигнал", post.subscribersCount ? `${post.subscribersCount} подписчиков` : post.text]}
+      />
+      <SourceColumn
+        items={sources.telegram || []}
+        label="Telegram"
+        mapper={(post) => [post.title || post.handle || "Telegram сигнал", post.subscribersCount ? `${post.subscribersCount} подписчиков` : post.text]}
+      />
+      <SourceColumn
+        items={sources.wordstat || []}
+        label="Wordstat"
+        mapper={(query) => [query.phrase, query.impressions ? `${query.impressions} показов` : query.region]}
       />
     </motion.section>
   );
@@ -1090,9 +1158,9 @@ function buildPulseCards({ competitors, enabledSourceCount, priceInsights, promo
     {
       icon: DatabaseZap,
       label: "Источники",
-      value: `${enabledSourceCount + 2}/5`,
-      detail: "карты, сайты, Avito и Instagram",
-      progress: Math.min(100, (enabledSourceCount + 2) * 20),
+      value: `${enabledSourceCount + 2}/${SOURCE_OPTIONS.length + 2}`,
+      detail: "карты, агрегаторы, соцсети и спрос",
+      progress: Math.min(100, ((enabledSourceCount + 2) / (SOURCE_OPTIONS.length + 2)) * 100),
     },
     {
       icon: AnimatedSparkles,

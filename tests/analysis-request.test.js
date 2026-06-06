@@ -9,7 +9,7 @@ test("validates the analyze form payload with safe defaults", () => {
     service: " контурная пластика ",
     limit: "33",
     instagramProfiles: "clinic_linia, https://instagram.com/doctor.skin.spb/",
-    sources: { instagram: true, avito: false, yandex: true },
+    sources: { instagram: true, avito: false, yandex: true, twoGis: true, prodoctorov: true, wordstat: true },
   });
 
   assert.deepEqual(payload, {
@@ -17,7 +17,19 @@ test("validates the analyze form payload with safe defaults", () => {
     service: "контурная пластика",
     limit: 5,
     instagramProfiles: ["clinic_linia", "doctor.skin.spb"],
-    sources: { instagram: true, avito: false, yandex: true },
+    sources: {
+      instagram: true,
+      avito: false,
+      yandex: true,
+      twoGis: true,
+      zoon: false,
+      prodoctorov: true,
+      napopravku: false,
+      yell: false,
+      vk: false,
+      telegram: false,
+      wordstat: true,
+    },
   });
 });
 
