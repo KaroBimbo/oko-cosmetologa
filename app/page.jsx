@@ -275,7 +275,14 @@ export default function Home() {
             >
               <Moon size={18} />
             </motion.button>
-            <motion.button className="new-analysis-button cta-button" onClick={startNewAnalysis} type="button" whileTap={tapMotion}>
+            <motion.button
+              aria-label="Новый анализ"
+              className="new-analysis-button cta-button"
+              onClick={startNewAnalysis}
+              title="Новый анализ"
+              type="button"
+              whileTap={tapMotion}
+            >
               <Plus size={18} />
               Новый анализ
             </motion.button>
