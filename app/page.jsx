@@ -51,7 +51,8 @@ const SOURCE_OPTIONS = [
   { id: "wordstat", label: "Wordstat", detail: "спрос и формулировки" },
 ];
 
-const DEFAULT_SOURCES = Object.fromEntries(SOURCE_OPTIONS.map((source) => [source.id, true]));
+const DEFAULT_ENABLED_SOURCE_IDS = new Set(["yandex", "avito", "instagram"]);
+const DEFAULT_SOURCES = Object.fromEntries(SOURCE_OPTIONS.map((source) => [source.id, DEFAULT_ENABLED_SOURCE_IDS.has(source.id)]));
 
 const IRIS_IMAGE_URL = "/assets/iris-market-bg.png";
 const BRAND_LOGO_URL = "/assets/oko-cosmetologa-mark.png";
@@ -557,7 +558,7 @@ function ResultsDashboard({ chartData, competitors, isRealResult, priceInsights,
 
         <aside className="right-rail">
           <DashboardPanel eyebrow="Цены / препараты" title="Препараты">
-            <PreparationDonut data={chartData} />
+            <PreparationDonut data={chartData} service={result?.brief?.search?.service} />
             <InsightList empty="Цены пока не найдены" items={priceInsights} limit={3} />
           </DashboardPanel>
 
@@ -805,8 +806,25 @@ function SourceBadge({ label }) {
   return <span className="source-badge">{label}</span>;
 }
 
-function PreparationDonut({ data }) {
+function PreparationDonut({ data, service }) {
   const chart = useMemo(() => buildNestedPreparationChart(data), [data]);
+
+  if (data.length === 0) {
+    return (
+      <div className="donut-card">
+        <div className="preparation-chart-shell empty-preparation-chart">
+          <DatabaseZap size={28} />
+          <strong>Препараты не найдены</strong>
+          <p>
+            {service
+              ? `По запросу "${service}" источники пока не вернули подтвержденные препараты.`
+              : "После анализа здесь появятся только препараты, найденные в источниках."}
+          </p>
+        </div>
+        <p className="empty-note">Демо-препараты не подставляются в реальный отчет, чтобы не вводить в заблуждение.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="donut-card">
@@ -961,7 +979,7 @@ function classifyPreparation(name) {
   const value = name.toLowerCase();
   if (/radiesse|sculptra|ellanse|ланлум|коллаген|полимолоч/.test(value)) return "Биостимуляторы";
   if (/botox|ботокс|dysport|диспорт|xeomin|ксеомин/.test(value)) return "Ботулотоксины";
-  if (/skinbooster|мезо|биоревитал|profhilo|профайло/.test(value)) return "Skin quality";
+  if (/skinbooster|мезо|биоревитал|profhilo|профайло|neauvia|hydro deluxe|неаув/.test(value)) return "Skin quality";
   if (/juvederm|stylage|belotero|restylane|teosyal|филлер/.test(value)) return "Филлеры ГК";
   return "Другие препараты";
 }
@@ -1141,13 +1159,7 @@ function buildPreparationChartData(competitors) {
   }
 
   const data = [...counts.entries()].map(([name, value]) => ({ name, value }));
-  return data.length > 0
-    ? data
-    : [
-        { name: "Juvederm", value: 4 },
-        { name: "Stylage", value: 3 },
-        { name: "Belotero", value: 2 },
-      ];
+  return data.length > 0 ? data : [];
 }
 
 function buildPulseCards({ competitors, enabledSourceCount, priceInsights, promotionInsights }) {

@@ -26,11 +26,13 @@ import { runOpenRouterAnalysis } from "../../../lib/openrouter.js";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const MAPS_TIMEOUT_SECONDS = 22;
-const MAPS_REQUEST_TIMEOUT_MS = 25_000;
-const OPTIONAL_SOURCE_TIMEOUT_SECONDS = 2;
-const OPTIONAL_REQUEST_TIMEOUT_MS = 3_000;
-const AI_REQUEST_TIMEOUT_MS = 10_000;
+const MAPS_TIMEOUT_SECONDS = 30;
+const MAPS_REQUEST_TIMEOUT_MS = 33_000;
+const WEBSITE_SOURCE_TIMEOUT_SECONDS = 10;
+const WEBSITE_REQUEST_TIMEOUT_MS = 12_000;
+const OPTIONAL_SOURCE_TIMEOUT_SECONDS = 5;
+const OPTIONAL_REQUEST_TIMEOUT_MS = 6_000;
+const AI_REQUEST_TIMEOUT_MS = 15_000;
 
 export async function POST(request) {
   try {
@@ -64,8 +66,8 @@ export async function POST(request) {
             actorId: config.crawlerActorId,
             token: config.apifyToken,
             input: crawlerInput,
-            timeoutSeconds: OPTIONAL_SOURCE_TIMEOUT_SECONDS,
-            requestTimeoutMs: OPTIONAL_REQUEST_TIMEOUT_MS,
+            timeoutSeconds: WEBSITE_SOURCE_TIMEOUT_SECONDS,
+            requestTimeoutMs: WEBSITE_REQUEST_TIMEOUT_MS,
             sourceName: "Сайты конкурентов",
           })
         : Promise.resolve({

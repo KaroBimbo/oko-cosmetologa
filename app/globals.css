@@ -2420,6 +2420,33 @@ dd {
   overflow: visible;
 }
 
+.empty-preparation-chart {
+  min-height: 214px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 22px;
+  text-align: center;
+}
+
+.empty-preparation-chart svg {
+  color: var(--accent-deep);
+}
+
+.empty-preparation-chart strong {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.empty-preparation-chart p {
+  max-width: 26ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.38;
+}
+
 .preparation-arc-label {
   fill: #fffafd;
   font-size: 0.58rem;

@@ -41,7 +41,7 @@ test("builds a bounded Apify Google Maps input for local cosmetic research", () 
       limit: 12,
     }),
     {
-      searchStringsArray: ["контурная пластика косметология"],
+      searchStringsArray: ["контурная пластика цена косметология"],
       locationQuery: "Санкт-Петербург",
       maxCrawledPlacesPerSearch: 5,
       language: "ru",
@@ -99,12 +99,14 @@ test("normalizes Apify place rows without leaking irrelevant or closed places", 
 test("extracts price, promotion, package, and preparation evidence from website text", () => {
   const signals = extractCommercialSignals(`
     Контурная пластика губ Juvederm Ultra Smile 1 мл — 18 900 ₽.
+    Биоревитализация Neauvia Hydro Deluxe 2,5ml — 16 000 ₽.
     Акция до конца месяца: консультация бесплатно при записи на процедуру.
     Комплекс: скулы + подбородок от 39 000 руб. Используем Stylage и Belotero.
   `);
 
   assert.deepEqual(signals.prices, [
     "Контурная пластика губ Juvederm Ultra Smile 1 мл — 18 900 ₽",
+    "Биоревитализация Neauvia Hydro Deluxe 2,5ml — 16 000 ₽",
     "Комплекс: скулы + подбородок от 39 000 руб",
   ]);
   assert.deepEqual(signals.promotions, [
@@ -113,7 +115,7 @@ test("extracts price, promotion, package, and preparation evidence from website 
   assert.deepEqual(signals.packages, [
     "Комплекс: скулы + подбородок от 39 000 руб",
   ]);
-  assert.deepEqual(signals.preparations, ["Juvederm", "Stylage", "Belotero"]);
+  assert.deepEqual(signals.preparations, ["Juvederm", "Stylage", "Belotero", "Neauvia Hydro Deluxe"]);
 });
 
 test("prepares a compact competitor brief with explicit missing-price markers", () => {
@@ -199,8 +201,8 @@ test("builds bounded crawler input for competitor websites only", () => {
     { url: "https://clinic-one.example" },
     { url: "https://clinic-two.example" },
   ]);
-  assert.equal(input.maxCrawlPages, 4);
-  assert.equal(input.maxCrawlDepth, 1);
+  assert.equal(input.maxCrawlPages, 8);
+  assert.equal(input.maxCrawlDepth, 2);
   assert.equal(input.crawlerType, "playwright:adaptive");
 });
 
